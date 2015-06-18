@@ -1,4 +1,4 @@
-package chapter3
+package com.scala.fp.structures
 
 sealed trait List[+A]
 
