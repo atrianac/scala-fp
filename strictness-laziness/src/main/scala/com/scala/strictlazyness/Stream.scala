@@ -16,6 +16,13 @@ sealed trait Stream[+A] {
   
   def take(n: Int) : List[A] = takeIter(n, 0)
   
+  def take_unfold(n: Int): List[A] = Stream.unfold((this, 1)) { s =>
+     s._1 match {
+       case Cons(h, t) if s._2 <= n => Some((h(), (t(), s._2 + 1)))
+       case _ => None
+     }
+  }.toList
+  
   private def takeIter(n: Int, i: Int) : List[A] = this match {
     case Empty => Nil
     case Cons(h, t) => if(n == i) Nil else h() :: t().takeIter(n, i + 1)
@@ -34,6 +41,11 @@ sealed trait Stream[+A] {
       lazy val hl = h()
       if(p(hl)) Stream.cons(hl, t().takeWhile ( p )) else Empty
     }
+  }
+  
+  def takeWhile_unfold(p: A => Boolean) : Stream[A] = Stream.unfold(this) {
+    case Cons(h, t) if(p(h())) => Some((h(), t()))
+    case _ => None
   }
   
   def exist(p: A => Boolean): Boolean = this match {
@@ -55,6 +67,11 @@ sealed trait Stream[+A] {
   def filter(p: A => Boolean): Stream[A] = foldRight(Stream.empty:Stream[A])((a, b) => if(p(a)) Stream.cons(a, b) else b)
   
   def map[B](f: A => B): Stream[B] = foldRight(Stream.empty:Stream[B])((a,b) => Stream.cons(f(a), b))
+  
+  def map_unfold[B](f: A => B): Stream[B] = Stream.unfold(this) {
+    case Cons(h, t) => Some((f(h()), t()))
+    case _ => None
+  }
   
   def append[S >: A](s: Stream[S]): Stream[S] = foldRight(s)((a,b) => Stream.cons(a, b))
   
@@ -81,12 +98,18 @@ object Stream {
   
   def constant[A](a: A): Stream[A] = Stream.cons(a, constant(a))
   
+  def constant_1[A](a: A): Stream[A] = unfold(a)(s => Option((a,s)))
+  
   def from(n: Int): Stream[Int] = Stream.cons(n, from(n + 1))
+  
+  def from_1(n: Int): Stream[Int] = unfold(n)(ni => Some(ni, ni + 1))
   
   def fibs: Stream[Int] = {
     def aux(a: Int, b: Int): Stream[Int] = Stream.cons(a, aux(b, a + b))
     aux(1,1)
   }
+  
+  def fibs_1: Stream[Int] = unfold((1,1))(i => Some((i._1, (i._2, i._1 + i._2)))) 
   
   def unfold[A,S](z: S)(f: S => Option[(A,S)]): Stream[A] = {
     f(z) match {

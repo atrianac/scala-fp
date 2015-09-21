@@ -12,7 +12,6 @@ object Fibonnacci {
     if (n == 1) 0
     else if (n == 2) 1
     else aux(2, 0, 1)
-
   }
 
 }

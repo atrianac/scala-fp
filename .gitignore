@@ -5,3 +5,6 @@
 target
 bin
 *.metadata
+*.class
+.recommenders
+.cache-main
