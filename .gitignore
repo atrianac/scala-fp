@@ -8,3 +8,4 @@ bin
 *.class
 .recommenders
 .cache-main
+*.idea
